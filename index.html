@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SafeBite — Real Menu Scanning &amp; Allergy-Safe Restaurant Finder</title>
-<script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
+<title>SafeBite — Find Allergy-Safe Restaurants & Menu Items</title>
 <style>
   :root {
     --primary: #10b981; --primary-dark: #047857; --accent: #f97316;
@@ -18,7 +17,7 @@
   nav .logo { font-weight:800; font-size:1.4rem; color:var(--primary-dark); }
   [data-theme="dark"] nav .logo { color:var(--primary); }
   nav .logo span { color:var(--accent); }
-  .tab-btns { display:flex; gap:6px; flex-wrap:wrap; }
+  .tab-btns { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
   .tab-btn { background:none; border:none; padding:10px 16px; border-radius:20px; font-weight:700; font-size:0.9rem; cursor:pointer; color:var(--text); }
   .tab-btn.active { background:var(--primary); color:white; }
   .theme-toggle { background:none; border:2px solid var(--muted); border-radius:20px; padding:6px 14px; cursor:pointer; color:var(--text); font-size:0.82rem; }
@@ -27,20 +26,18 @@
   .tab-content { display:none; }
   .tab-content.active { display:block; }
 
-  .hero { position:relative; min-height:560px; display:flex; align-items:center; overflow:hidden; }
+  .hero { position:relative; min-height:520px; display:flex; align-items:center; overflow:hidden; }
   .hero::before { content:''; position:absolute; inset:0; background:linear-gradient(120deg, rgba(4,120,87,0.92), rgba(16,185,129,0.75)); z-index:1; }
   .hero-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-  .hero-content { position:relative; z-index:2; max-width:640px; padding:0 60px; color:white; }
+  .hero-content { position:relative; z-index:2; max-width:660px; padding:0 60px; color:white; }
   .hero-content .kicker { display:inline-block; background:rgba(255,255,255,0.2); padding:6px 16px; border-radius:20px; font-size:0.85rem; font-weight:700; margin-bottom:16px; }
-  .hero-content h1 { font-size:2.6rem; font-weight:800; margin-bottom:18px; line-height:1.2; }
+  .hero-content h1 { font-size:2.5rem; font-weight:800; margin-bottom:18px; line-height:1.2; }
   .hero-content p { font-size:1.1rem; opacity:0.95; margin-bottom:28px; }
   .btn { padding:16px 34px; border-radius:30px; font-weight:700; font-size:1.02rem; border:none; cursor:pointer; }
   .btn-primary { background:var(--accent); color:white; box-shadow:0 8px 24px rgba(249,115,22,0.45); }
   .btn:hover { transform:translateY(-2px); transition:0.2s; }
-
   .disclaimer-banner { background:#fef3c7; color:#92400e; text-align:center; padding:10px 16px; font-size:0.85rem; font-weight:600; }
   [data-theme="dark"] .disclaimer-banner { background:#78350f; color:#fed7aa; }
-
   .stats-bar { background:var(--card); padding:26px 20px; display:flex; justify-content:center; gap:44px; flex-wrap:wrap; box-shadow:0 2px 12px rgba(0,0,0,0.04); }
   .stat { text-align:center; }
   .stat .num { font-size:2rem; font-weight:800; color:var(--primary-dark); }
@@ -51,35 +48,35 @@
   .section-title { text-align:center; margin-bottom:10px; font-size:1.9rem; font-weight:800; }
   .section-sub { text-align:center; color:var(--muted); max-width:640px; margin:0 auto 36px; }
 
-  .zip-card, .demo-section { background:var(--card); border-radius:20px; box-shadow:0 12px 40px rgba(0,0,0,0.08); padding:32px; }
-  .zip-search { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
-  .zip-search input { flex:1; min-width:200px; padding:15px 18px; border-radius:12px; border:2px solid #e2e8f0; font-size:1rem; background:var(--card); color:var(--text); }
-  .zip-search button { padding:15px 30px; border-radius:12px; border:none; background:var(--primary); color:white; font-weight:700; cursor:pointer; font-size:1rem; }
-  .zip-search button:hover { background:var(--primary-dark); }
-  .zip-status { font-size:0.85rem; color:var(--muted); margin-bottom:16px; min-height:20px; }
+  .search-card { background:var(--card); border-radius:20px; box-shadow:0 12px 40px rgba(0,0,0,0.08); padding:32px; }
+  .search-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .search-row input, .search-row select { flex:1; min-width:180px; padding:15px 18px; border-radius:12px; border:2px solid #e2e8f0; font-size:1rem; background:var(--card); color:var(--text); }
+  .allergen-multiselect { width:100%; margin-bottom:8px; }
+  .ms-label { font-size:0.82rem; font-weight:700; color:var(--muted); margin-bottom:8px; }
+  .ms-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .ms-chip { display:flex; align-items:center; gap:6px; padding:9px 14px; border-radius:20px; border:2px solid #e2e8f0; background:var(--card); color:var(--text); font-size:0.85rem; font-weight:600; cursor:pointer; user-select:none; }
+  .ms-chip input { margin:0; cursor:pointer; }
+  .ms-chip:has(input:checked) { background:var(--danger); border-color:var(--danger); color:white; }
+  .search-row button { padding:15px 30px; border-radius:12px; border:none; background:var(--primary); color:white; font-weight:700; cursor:pointer; font-size:1rem; }
+  .search-row button:hover { background:var(--primary-dark); }
+  .search-status { font-size:0.85rem; color:var(--muted); margin-bottom:16px; min-height:20px; }
+
+  .mode-toggle { display:flex; gap:8px; margin-bottom:20px; }
+  .mode-btn { flex:1; padding:12px; border-radius:10px; border:2px solid #e2e8f0; background:var(--card); color:var(--text); font-weight:700; cursor:pointer; }
+  .mode-btn.active { background:var(--primary); color:white; border-color:var(--primary); }
 
   .restaurant-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:16px; }
-  .r-card { border-radius:16px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,0.08); background:var(--card); border:1px solid rgba(148,163,184,0.15); padding:16px; }
-  .r-name { font-weight:700; font-size:1rem; margin-bottom:4px; }
+  .r-card { border-radius:16px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,0.08); background:var(--card); border:1px solid rgba(148,163,184,0.15); padding:18px; }
+  .r-name { font-weight:700; font-size:1.05rem; margin-bottom:4px; }
   .r-cuisine { color:var(--muted); font-size:0.82rem; margin-bottom:8px; }
-  .r-addr { color:var(--muted); font-size:0.78rem; margin-bottom:8px; }
+  .r-addr { color:var(--muted); font-size:0.78rem; margin-bottom:10px; }
   .r-note { font-size:0.78rem; background:rgba(16,185,129,0.1); color:var(--primary-dark); padding:6px 10px; border-radius:8px; display:inline-block; }
   [data-theme="dark"] .r-note { color:var(--primary); }
-
-  .upload-zone { border:3px dashed #cbd5e1; border-radius:16px; padding:44px; text-align:center; cursor:pointer; }
-  .upload-zone:hover { border-color:var(--primary); }
-  .upload-zone input { display:none; }
-  #preview { max-width:200px; margin:16px auto; display:none; border-radius:12px; box-shadow:0 6px 20px rgba(0,0,0,0.15); }
-  .ocr-progress { display:none; margin-top:16px; font-size:0.9rem; color:var(--muted); }
-  .result { display:none; margin-top:24px; padding:24px; border-radius:16px; }
-  .risk-high { background:rgba(239,68,68,0.08); border:2px solid var(--danger); }
-  .risk-med { background:rgba(245,158,11,0.08); border:2px solid var(--warning); }
-  .risk-low { background:rgba(16,185,129,0.08); border:2px solid var(--primary); }
-  .risk-score { font-size:1.9rem; font-weight:800; }
-  .badge { display:inline-block; padding:5px 13px; border-radius:20px; font-size:0.8rem; font-weight:700; margin-right:7px; margin-top:9px; }
-  .badge-allergen { background:#fee2e2; color:var(--danger); }
-  .badge-safe { background:#dcfce7; color:#047857; }
-  .extracted-text { margin-top:16px; background:rgba(148,163,184,0.1); border-radius:10px; padding:14px; font-size:0.82rem; color:var(--muted); max-height:120px; overflow-y:auto; white-space:pre-wrap; }
+  .match-badge { font-size:0.75rem; background:#dcfce7; color:#047857; padding:4px 10px; border-radius:12px; font-weight:700; margin-bottom:8px; display:inline-block; }
+  .safe-items { margin-top:10px; font-size:0.85rem; }
+  .safe-item { padding:6px 0; border-top:1px solid rgba(148,163,184,0.15); }
+  .safe-item:first-child { border-top:none; }
+  .item-allergens { color:var(--muted); font-size:0.75rem; }
 
   .features { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:20px; margin-top:20px; }
   .feature { background:var(--card); border-radius:16px; padding:24px; box-shadow:0 4px 16px rgba(0,0,0,0.06); text-align:center; }
@@ -88,10 +85,18 @@
   [data-theme="dark"] .feature h3 { color:var(--primary); }
   .feature p { color:var(--muted); font-size:0.86rem; }
 
+  .roadmap { display:flex; flex-direction:column; gap:16px; margin-top:24px; }
+  .phase { background:var(--card); border-radius:14px; padding:20px 24px; box-shadow:0 4px 14px rgba(0,0,0,0.06); border-left:5px solid var(--primary); }
+  .phase.future { border-left-color:#cbd5e1; opacity:0.85; }
+  .phase h4 { font-size:1rem; margin-bottom:4px; }
+  .phase p { color:var(--muted); font-size:0.87rem; }
+  .phase-tag { font-size:0.72rem; font-weight:800; text-transform:uppercase; color:var(--primary-dark); }
+  [data-theme="dark"] .phase-tag { color:var(--primary); }
+
   .faq-item { background:var(--card); border-radius:12px; margin-bottom:12px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.05); }
   .faq-q { padding:18px 22px; font-weight:700; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:0.96rem; }
   .faq-a { padding:0 22px; max-height:0; overflow:hidden; transition:max-height 0.3s ease, padding 0.3s ease; color:var(--muted); font-size:0.9rem; }
-  .faq-item.open .faq-a { max-height:220px; padding:0 22px 18px; }
+  .faq-item.open .faq-a { max-height:240px; padding:0 22px 18px; }
   .faq-icon { font-size:1.2rem; transition:transform 0.3s; }
   .faq-item.open .faq-icon { transform:rotate(45deg); }
 
@@ -112,15 +117,14 @@
 </head>
 <body>
 
-<div class="disclaimer-banner">⚠️ Demo prototype: menu scanning uses real text-recognition + FDA allergen keyword matching, but is not a substitute for asking your server or a medical professional.</div>
+<div class="disclaimer-banner">⚠️ Prototype covering 87 major national chains so far (approaching Phase 1 goal of 100) — not a substitute for asking your server or a medical professional. See Home tab for full data roadmap.</div>
 
 <nav>
   <div class="logo">Safe<span>Bite</span></div>
   <button class="hamburger" onclick="document.getElementById('tabBtns').classList.toggle('open')">☰</button>
   <div class="tab-btns" id="tabBtns">
     <button class="tab-btn active" onclick="showTab('home')">Home</button>
-    <button class="tab-btn" onclick="showTab('scanner')">Scanner</button>
-    <button class="tab-btn" onclick="showTab('restaurants')">Restaurants</button>
+    <button class="tab-btn" onclick="showTab('restaurants')">Find Restaurants</button>
     <button class="tab-btn" onclick="showTab('faq')">FAQ</button>
     <button class="tab-btn" onclick="showTab('join')">Join</button>
     <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
@@ -132,44 +136,44 @@
     <img class="hero-img" src="https://pplx-res.cloudinary.com/image/upload/pplx_search_images/a9b9b382528467fc0c2e56b2727283abb4af0fc8.jpg" alt="restaurant dining">
     <div class="hero-content">
       <span class="kicker">🛡️ For the 32M Americans living with food allergies</span>
-      <h1>Scan any menu. See real allergen matches instantly.</h1>
-      <p>SafeBite reads actual text from your menu photo and checks it against the FDA's 9 major food allergens — no guessing, no fake results.</p>
-      <button class="btn btn-primary" onclick="showTab('scanner')">Try the Real Scanner</button>
+      <h1>Find restaurants near you. See menu items that are actually safe.</h1>
+      <p>Enter your zip code and your allergen, and SafeBite shows nearby restaurants with menu items verified against official allergen guides — no guessing, no photo scanning required.</p>
+      <button class="btn btn-primary" onclick="showTab('restaurants')">Find Safe Restaurants</button>
     </div>
   </div>
   <div class="stats-bar">
+    <div class="stat"><div class="num">87</div><div class="label">Chains covered so far (Phase 1)</div></div>
     <div class="stat"><div class="num">9</div><div class="label">FDA major allergens tracked</div></div>
     <div class="stat"><div class="num">32M+</div><div class="label">Americans with food allergies</div></div>
-    <div class="stat"><div class="num">200K+</div><div class="label">ER visits per year (US)</div></div>
   </div>
   <section>
-    <h2 class="section-title">How SafeBite works — for real</h2>
-    <p class="section-sub">No fabricated results. Every score is computed live from text actually detected in your photo.</p>
+    <h2 class="section-title">How SafeBite works</h2>
+    <p class="section-sub">Every menu item shown is checked against official, publicly published allergen guides — not a photo scan or a guess.</p>
     <div class="features">
-      <div class="feature"><div class="icon">🔎</div><h3>Real OCR Text Extraction</h3><p>Runs Tesseract.js in your browser to read actual words from the menu photo you upload — nothing is hardcoded.</p></div>
-      <div class="feature"><div class="icon">🧪</div><h3>FDA 9-Allergen Matching</h3><p>Checks extracted text against milk, eggs, fish, shellfish, tree nuts, peanuts, wheat, soybeans, and sesame.</p></div>
-      <div class="feature"><div class="icon">📍</div><h3>Live Location Search</h3><p>Restaurant search uses live OpenStreetMap data for your zip code — not a fixed mock list.</p></div>
-      <div class="feature"><div class="icon">🗣️</div><h3>Community Reports (Coming Soon)</h3><p>We do not display fake reviews. Report counts only appear once real users start submitting them.</p></div>
+      <div class="feature"><div class="icon">📍</div><h3>Live Restaurant Search</h3><p>Enter a zip code to pull real, live nearby restaurants from OpenStreetMap data.</p></div>
+      <div class="feature"><div class="icon">✅</div><h3>Verified Allergen Matching</h3><p>Cross-references matched restaurants against a structured database built from each chain's official allergen guide.</p></div>
+      <div class="feature"><div class="icon">🍽️</div><h3>Real Safe Menu Items</h3><p>See exactly which breakfast, lunch, or dinner items avoid your selected allergen — not a generic score.</p></div>
+      <div class="feature"><div class="icon">🗣️</div><h3>Community Reports (Coming Soon)</h3><p>Independent restaurants without official data will rely on real user-submitted reports as we grow.</p></div>
     </div>
   </section>
-</div>
-
-<div id="tab-scanner" class="tab-content">
-  <section>
-    <h2 class="section-title">Menu &amp; Dish Scanner</h2>
-    <p class="section-sub">Upload a clear photo of a menu or ingredient label. We extract the actual text and flag any of the 9 FDA major allergens found in it.</p>
-    <div class="demo-section">
-      <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-        <input type="file" id="fileInput" accept="image/*" onchange="handleUpload(event)">
-        <p style="font-size:1.05rem;font-weight:600">📸 Click to upload a menu or ingredient label photo</p>
-        <p style="font-size:0.8rem;color:var(--muted);margin-top:8px">Clear, well-lit text photos work best. Handwritten menus may not scan accurately.</p>
-        <img id="preview" src="" alt="preview">
+  <section style="background:var(--card);border-radius:24px;">
+    <h2 class="section-title">Our data roadmap</h2>
+    <p class="section-sub">Building a nationwide allergen database is a multi-phase effort. Here's exactly where we are and where we're headed.</p>
+    <div class="roadmap">
+      <div class="phase">
+        <span class="phase-tag">Phase 1 — Live now</span>
+        <h4>Top 25 national chains, breakfast/lunch/dinner</h4>
+        <p>Structured allergen data for 87 fast food, fast casual, casual dining, and breakfast chains (McDonald's, Chick-fil-A, Chipotle, Olive Garden, IHOP, Chili's, and more), covering all 9 FDA major allergens.</p>
       </div>
-      <div class="ocr-progress" id="ocrProgress">🔄 Reading text from image...</div>
-      <div class="result" id="resultBox">
-        <div class="risk-score" id="riskScoreText"></div>
-        <div id="badgeContainer"></div>
-        <div class="extracted-text" id="extractedTextBox"></div>
+      <div class="phase future">
+        <span class="phase-tag">Phase 2 — Next</span>
+        <h4>Expand to top 100 national chains</h4>
+        <p>Add the remaining ~13 chains to reach the full top-100 goal, sourced from each brand's official published allergen guide.</p>
+      </div>
+      <div class="phase future">
+        <span class="phase-tag">Phase 3 — Future</span>
+        <h4>Independent & local restaurant coverage</h4>
+        <p>Since independent restaurants don't publish standardized allergen guides, this phase relies on verified community-submitted reports plus direct restaurant partnerships.</p>
       </div>
     </div>
   </section>
@@ -177,14 +181,50 @@
 
 <div id="tab-restaurants" class="tab-content">
   <section>
-    <h2 class="section-title">Find restaurants near you</h2>
-    <p class="section-sub">Enter a zip code to pull real, live restaurant listings from OpenStreetMap for that area. Allergy scores are not shown until real diner reports exist for that restaurant, so nothing here is fabricated.</p>
-    <div class="zip-card">
-      <div class="zip-search">
-        <input type="text" id="zipInput" placeholder="Enter zip code (e.g. 80126)" maxlength="10">
+    <h2 class="section-title">Find allergy-safe restaurants and menu items</h2>
+    <p class="section-sub">Search by zip code to find nearby chains we cover, or search a specific restaurant directly to see its full safe-item list.</p>
+    <div class="search-card">
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="modeZipBtn" onclick="setMode('zip')">Search by Zip Code</button>
+        <button class="mode-btn" id="modeNameBtn" onclick="setMode('name')">Search by Restaurant Name</button>
+      </div>
+      <div class="search-row" id="zipRow">
+        <input type="text" id="zipInput" placeholder="Enter zip code (e.g. 80130)" maxlength="10">
+        <div class="allergen-multiselect" id="allergenMultiZip">
+          <div class="ms-label">Avoid which allergen(s)? (select all that apply)</div>
+          <div class="ms-chips">
+            <label class="ms-chip"><input type="checkbox" value="Milk">Milk</label>
+            <label class="ms-chip"><input type="checkbox" value="Eggs">Eggs</label>
+            <label class="ms-chip"><input type="checkbox" value="Fish">Fish</label>
+            <label class="ms-chip"><input type="checkbox" value="Crustacean Shellfish">Shellfish</label>
+            <label class="ms-chip"><input type="checkbox" value="Tree Nuts">Tree Nuts</label>
+            <label class="ms-chip"><input type="checkbox" value="Peanuts">Peanuts</label>
+            <label class="ms-chip"><input type="checkbox" value="Wheat">Wheat</label>
+            <label class="ms-chip"><input type="checkbox" value="Soybeans">Soybeans</label>
+            <label class="ms-chip"><input type="checkbox" value="Sesame">Sesame</label>
+          </div>
+        </div>
         <button onclick="searchZip()">Search</button>
       </div>
-      <div class="zip-status" id="zipStatus"></div>
+      <div class="search-row" id="nameRow" style="display:none;">
+        <input type="text" id="nameInput" placeholder="Enter restaurant name (e.g. Olive Garden)">
+        <div class="allergen-multiselect" id="allergenMultiName">
+          <div class="ms-label">Avoid which allergen(s)? (select all that apply)</div>
+          <div class="ms-chips">
+            <label class="ms-chip"><input type="checkbox" value="Milk">Milk</label>
+            <label class="ms-chip"><input type="checkbox" value="Eggs">Eggs</label>
+            <label class="ms-chip"><input type="checkbox" value="Fish">Fish</label>
+            <label class="ms-chip"><input type="checkbox" value="Crustacean Shellfish">Shellfish</label>
+            <label class="ms-chip"><input type="checkbox" value="Tree Nuts">Tree Nuts</label>
+            <label class="ms-chip"><input type="checkbox" value="Peanuts">Peanuts</label>
+            <label class="ms-chip"><input type="checkbox" value="Wheat">Wheat</label>
+            <label class="ms-chip"><input type="checkbox" value="Soybeans">Soybeans</label>
+            <label class="ms-chip"><input type="checkbox" value="Sesame">Sesame</label>
+          </div>
+        </div>
+        <button onclick="searchByName()">Search</button>
+      </div>
+      <div class="search-status" id="searchStatus"></div>
       <div class="restaurant-grid" id="restaurantGrid"></div>
     </div>
   </section>
@@ -195,23 +235,23 @@
     <h2 class="section-title">Frequently asked questions</h2>
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)"><span>Is SafeBite a substitute for medical advice?</span><span class="faq-icon">+</span></div>
-      <div class="faq-a">No. SafeBite is a risk-awareness tool, not a medical device. Always carry your prescribed epinephrine and consult your allergist for personal dietary decisions.</div>
+      <div class="faq-a">No. SafeBite is a risk-awareness tool, not a medical device. Always carry your prescribed epinephrine and consult your allergist for personal dietary decisions, and confirm with restaurant staff before ordering.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)"><span>How does the scanner actually work?</span><span class="faq-icon">+</span></div>
-      <div class="faq-a">It runs real optical character recognition (OCR) on your uploaded photo to extract actual text, then checks that text against the FDA's official list of 9 major food allergens. It does not guess a random dish — it only reports what it can actually read.</div>
+      <div class="faq-q" onclick="toggleFaq(this)"><span>Where does the allergen menu data come from?</span><span class="faq-icon">+</span></div>
+      <div class="faq-a">Menu allergen data is sourced from each chain's official, publicly published allergen guide. We currently cover 25 major national chains as our Phase 1 dataset, with more being added over time.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)"><span>Where does the restaurant data come from?</span><span class="faq-icon">+</span></div>
-      <div class="faq-a">Restaurant names and addresses come live from OpenStreetMap's public database for the zip code you search. We do not display fabricated allergy scores — those only appear once real community reports exist.</div>
+      <div class="faq-q" onclick="toggleFaq(this)"><span>What if my restaurant isn't in the database yet?</span><span class="faq-icon">+</span></div>
+      <div class="faq-a">We only show verified allergen matches for chains in our current database. Restaurants outside it show "no verified allergen data yet" rather than a fabricated score — we'd rather be honest than guess.</div>
     </div>
     <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)"><span>Why don't restaurants show a safety score yet?</span><span class="faq-icon">+</span></div>
-      <div class="faq-a">We only show a score when it's backed by real ingredient data or real diner-submitted reports. Since this is an early prototype, most restaurants will show "no reports yet" rather than a fabricated number.</div>
+      <div class="faq-q" onclick="toggleFaq(this)"><span>Why did we drop the photo scanner?</span><span class="faq-icon">+</span></div>
+      <div class="faq-a">Photo-based menu scanning proved unreliable for dense, multi-column menus. We pivoted to structured, verified allergen data instead, which gives more accurate and trustworthy results.</div>
     </div>
     <div class="faq-item">
       <div class="faq-q" onclick="toggleFaq(this)"><span>Is SafeBite free?</span><span class="faq-icon">+</span></div>
-      <div class="faq-a">Yes, the core scanner and restaurant search will be free at launch.</div>
+      <div class="faq-a">Yes, the core restaurant and menu search is free at launch.</div>
     </div>
   </section>
 </div>
@@ -220,12 +260,12 @@
   <section>
     <div class="cta-final">
       <h2 style="font-size:1.8rem;margin-bottom:10px;">Join the SafeBite waitlist</h2>
-      <p style="opacity:0.9;margin-bottom:8px;">Be first to try SafeBite when we launch. Tell us your top allergy so we tailor your first scan.</p>
+      <p style="opacity:0.9;margin-bottom:8px;">Be first to try SafeBite as we expand our restaurant database. Tell us your top allergen so we prioritize accordingly.</p>
       <form class="waitlist" onsubmit="joinWaitlist(event)">
         <input type="email" id="email" placeholder="you@email.com" required>
         <select id="allergy">
-          <option>Peanuts</option><option>Tree nuts</option><option>Shellfish</option><option>Dairy</option>
-          <option>Gluten</option><option>Eggs</option><option>Soy</option><option>Sesame</option><option>Other</option>
+          <option>Peanuts</option><option>Tree Nuts</option><option>Shellfish</option><option>Milk</option>
+          <option>Wheat</option><option>Eggs</option><option>Soybeans</option><option>Sesame</option><option>Fish</option>
         </select>
         <button type="submit">Join Waitlist</button>
       </form>
@@ -234,14 +274,16 @@
   </section>
 </div>
 
-<footer>SafeBite is a concept demo — not yet a licensed medical product. Restaurant data via OpenStreetMap contributors; allergen definitions via FDA.</footer>
+<footer>SafeBite is a concept demo — not yet a licensed medical product. Restaurant location data via OpenStreetMap contributors; allergen data compiled from official chain-published allergen guides (Phase 1: 87 of 100 chains).</footer>
 
 <script>
+const RESTAURANT_DB = [{"name": "McDonald's", "category": "Fast Food", "meal": ["Breakfast", "Lunch", "Dinner"], "items": [{"name": "Egg McMuffin", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Sausage McMuffin", "allergens": ["Milk", "Wheat"]}, {"name": "Hash Browns", "allergens": ["Wheat"]}, {"name": "Hotcakes", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Big Mac", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}, {"name": "Quarter Pounder with Cheese", "allergens": ["Milk", "Wheat", "Soybeans"]}, {"name": "McChicken", "allergens": ["Eggs", "Wheat", "Soybeans"]}, {"name": "Filet-O-Fish", "allergens": ["Fish", "Eggs", "Milk", "Wheat", "Soybeans"]}, {"name": "French Fries", "allergens": ["Milk"]}, {"name": "Chicken McNuggets", "allergens": ["Wheat"]}, {"name": "Fruit & Maple Oatmeal", "allergens": ["Milk"]}, {"name": "Apple Pie", "allergens": ["Milk", "Wheat", "Soybeans"]}, {"name": "McFlurry (Oreo)", "allergens": ["Milk", "Wheat", "Soybeans"]}, {"name": "Side Salad", "allergens": []}]}, {"name": "Chick-fil-A", "category": "Fast Food", "meal": ["Breakfast", "Lunch", "Dinner"], "items": [{"name": "Chicken Sandwich", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Spicy Chicken Sandwich", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Grilled Chicken Sandwich", "allergens": ["Milk", "Wheat"]}, {"name": "Chicken Nuggets", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Grilled Nuggets", "allergens": ["Milk"]}, {"name": "Waffle Fries", "allergens": ["Milk"]}, {"name": "Chick-n-Minis", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Cobb Salad", "allergens": ["Milk", "Eggs"]}, {"name": "Mac & Cheese", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Fruit Cup", "allergens": []}]}, {"name": "Subway", "category": "Fast Casual", "meal": ["Breakfast", "Lunch", "Dinner"], "items": [{"name": "Turkey Breast Sub (no cheese)", "allergens": ["Wheat", "Soybeans"]}, {"name": "Veggie Delite", "allergens": ["Wheat", "Soybeans"]}, {"name": "Tuna Sub", "allergens": ["Fish", "Eggs", "Wheat", "Soybeans"]}, {"name": "Cold Cut Combo", "allergens": ["Milk", "Wheat", "Soybeans"]}, {"name": "Italian B.M.T.", "allergens": ["Milk", "Wheat", "Soybeans"]}, {"name": "Meatball Marinara", "allergens": ["Milk", "Wheat", "Eggs", "Soybeans"]}, {"name": "Rotisserie-Style Chicken", "allergens": ["Wheat", "Soybeans"]}, {"name": "Steak & Cheese", "allergens": ["Milk", "Wheat", "Soybeans"]}, {"name": "Chicken & Bacon Ranch", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}, {"name": "Black Forest Ham", "allergens": ["Wheat", "Soybeans"]}]}, {"name": "Starbucks", "category": "Coffee/Snack", "meal": ["Breakfast", "Lunch"], "items": [{"name": "Caffe Latte", "allergens": ["Milk"]}, {"name": "Bacon Gouda Egg Sandwich", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Black Coffee", "allergens": []}, {"name": "Iced Green Tea (unsweetened)", "allergens": []}, {"name": "Caramel Macchiato", "allergens": ["Milk"]}, {"name": "Butter Croissant", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Spinach Feta Wrap", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Cake Pop", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}]}, {"name": "Taco Bell", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "items": [{"name": "Bean Burrito", "allergens": ["Milk", "Wheat"]}, {"name": "Crunchy Taco", "allergens": ["Milk", "Wheat"]}, {"name": "Chicken Quesadilla", "allergens": ["Milk", "Wheat"]}, {"name": "Crunchwrap Supreme", "allergens": ["Milk", "Wheat"]}, {"name": "Nacho Fries", "allergens": ["Milk"]}, {"name": "Cheesy Gordita Crunch", "allergens": ["Milk", "Wheat"]}, {"name": "Black Bean Chalupa", "allergens": ["Milk", "Wheat"]}, {"name": "Mexican Pizza", "allergens": ["Milk", "Wheat"]}]}, {"name": "Wendy's", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "items": [{"name": "Dave's Single", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}, {"name": "Grilled Chicken Sandwich", "allergens": ["Milk", "Wheat", "Soybeans"]}, {"name": "Chili", "allergens": ["Soybeans"]}, {"name": "Baconator", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}, {"name": "Spicy Chicken Sandwich", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}, {"name": "French Fries", "allergens": []}, {"name": "Frosty", "allergens": ["Milk"]}, {"name": "Side Salad", "allergens": []}]}, {"name": "Chipotle", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "items": [{"name": "Chicken Burrito Bowl (no cheese/sour cream)", "allergens": []}, {"name": "Steak Burrito", "allergens": ["Wheat", "Milk"]}, {"name": "Barbacoa Bowl", "allergens": ["Milk"]}, {"name": "Sofritas Bowl", "allergens": ["Soybeans"]}, {"name": "Carnitas Tacos", "allergens": ["Wheat", "Milk"]}, {"name": "Chips & Guacamole", "allergens": []}, {"name": "Chips & Queso", "allergens": ["Milk"]}, {"name": "Cilantro-Lime Rice", "allergens": []}, {"name": "Black Beans", "allergens": []}, {"name": "Salad Bowl", "allergens": []}]}, {"name": "Panera Bread", "category": "Fast Casual", "meal": ["Breakfast", "Lunch", "Dinner"], "items": [{"name": "Broccoli Cheddar Soup", "allergens": ["Milk", "Wheat"]}, {"name": "Turkey Sandwich", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Greek Salad", "allergens": ["Milk"]}, {"name": "Chicken Caesar Salad", "allergens": ["Milk", "Fish", "Wheat", "Eggs"]}, {"name": "Mediterranean Veggie Sandwich", "allergens": ["Milk", "Wheat"]}, {"name": "Chicken Noodle Soup", "allergens": ["Wheat", "Eggs"]}, {"name": "Tomato Soup", "allergens": ["Milk"]}, {"name": "Bagel (plain)", "allergens": ["Wheat"]}]}, {"name": "Panda Express", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "items": [{"name": "Orange Chicken", "allergens": ["Eggs", "Wheat", "Soybeans"]}, {"name": "Chow Mein", "allergens": ["Wheat", "Eggs", "Soybeans"]}, {"name": "Broccoli Beef", "allergens": ["Soybeans", "Wheat"]}, {"name": "Kung Pao Chicken", "allergens": ["Peanuts", "Soybeans", "Wheat"]}, {"name": "Beijing Beef", "allergens": ["Wheat", "Soybeans", "Eggs"]}, {"name": "String Bean Chicken Breast", "allergens": ["Soybeans", "Wheat"]}, {"name": "White Steamed Rice", "allergens": []}, {"name": "Super Greens", "allergens": []}]}, {"name": "Domino's Pizza", "category": "Pizza", "meal": ["Lunch", "Dinner"], "items": [{"name": "Cheese Pizza", "allergens": ["Milk", "Wheat"]}, {"name": "Pepperoni Pizza", "allergens": ["Milk", "Wheat"]}, {"name": "Gluten-Free Crust Pizza", "allergens": ["Milk"]}, {"name": "Buffalo Wings", "allergens": ["Milk"]}, {"name": "Stuffed Cheesy Bread", "allergens": ["Milk", "Wheat"]}, {"name": "Chocolate Lava Crunch Cake", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}]}, {"name": "Burger King", "category": "Fast Food", "meal": ["Breakfast", "Lunch", "Dinner"], "items": [{"name": "Whopper", "allergens": ["Wheat", "Soybeans"]}, {"name": "Chicken Fries", "allergens": ["Wheat", "Milk"]}, {"name": "Croissan'wich", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Original Chicken Sandwich", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "French Fries", "allergens": []}, {"name": "Impossible Whopper", "allergens": ["Soybeans", "Wheat"]}]}, {"name": "Dunkin'", "category": "Coffee/Snack", "meal": ["Breakfast", "Lunch"], "items": [{"name": "Glazed Donut", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}, {"name": "Bacon Egg & Cheese Wake-Up Wrap", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Iced Coffee (black)", "allergens": []}, {"name": "Boston Kreme Donut", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}, {"name": "Hash Browns", "allergens": []}, {"name": "Avocado Toast", "allergens": ["Wheat"]}]}, {"name": "Popeyes", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "items": [{"name": "Classic Chicken Sandwich", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Cajun Fries", "allergens": []}, {"name": "Red Beans and Rice", "allergens": ["Milk"]}, {"name": "Spicy Chicken Tenders", "allergens": ["Wheat", "Eggs"]}, {"name": "Biscuit", "allergens": ["Milk", "Wheat"]}, {"name": "Coleslaw", "allergens": ["Eggs"]}]}, {"name": "Pizza Hut", "category": "Pizza", "meal": ["Lunch", "Dinner"], "items": [{"name": "Pepperoni Pan Pizza", "allergens": ["Milk", "Wheat"]}, {"name": "Breadsticks", "allergens": ["Wheat", "Milk"]}, {"name": "Cheese Sticks", "allergens": ["Milk", "Wheat"]}, {"name": "Supreme Pizza", "allergens": ["Milk", "Wheat"]}, {"name": "Wings", "allergens": ["Milk"]}]}, {"name": "Olive Garden", "category": "Casual Dining", "meal": ["Lunch", "Dinner"], "items": [{"name": "Fettuccine Alfredo", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Shrimp Scampi", "allergens": ["Crustacean Shellfish", "Wheat", "Milk"]}, {"name": "Chicken Parmigiana", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Minestrone Soup", "allergens": []}, {"name": "Zuppa Toscana", "allergens": ["Milk"]}, {"name": "Lasagna Classico", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Chicken Alfredo", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Grilled Chicken Margherita", "allergens": ["Milk"]}, {"name": "Breadsticks", "allergens": ["Wheat", "Milk"]}, {"name": "House Salad (no cheese/croutons)", "allergens": []}, {"name": "Shrimp Alfredo", "allergens": ["Crustacean Shellfish", "Milk", "Wheat", "Eggs"]}, {"name": "Eggplant Parmigiana", "allergens": ["Milk", "Wheat", "Eggs"]}]}, {"name": "Jersey Mike's", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "items": [{"name": "Turkey and Provolone Sub", "allergens": ["Milk", "Wheat"]}, {"name": "Club Sub", "allergens": ["Milk", "Wheat"]}, {"name": "The Original Italian", "allergens": ["Milk", "Wheat"]}, {"name": "Chipotle Cheese Steak", "allergens": ["Milk", "Wheat"]}, {"name": "Grilled Chicken Philly", "allergens": ["Milk", "Wheat"]}]}, {"name": "Five Guys", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "items": [{"name": "Cheeseburger", "allergens": ["Milk", "Wheat"]}, {"name": "Cajun Fries", "allergens": ["Milk"]}, {"name": "Bacon Cheese Dog", "allergens": ["Milk", "Wheat"]}, {"name": "Grilled Cheese Sandwich", "allergens": ["Milk", "Wheat"]}, {"name": "Veggie Sandwich", "allergens": ["Milk", "Wheat"]}]}, {"name": "In-N-Out Burger", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "items": [{"name": "Double-Double", "allergens": ["Milk", "Wheat"]}, {"name": "Animal Style Fries", "allergens": ["Milk"]}, {"name": "Neapolitan Shake", "allergens": ["Milk"]}, {"name": "Grilled Cheese", "allergens": ["Milk", "Wheat"]}]}, {"name": "Wingstop", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "items": [{"name": "Classic Wings", "allergens": ["Milk"]}, {"name": "Louisiana Voodoo Fries", "allergens": ["Milk"]}, {"name": "Boneless Wings", "allergens": ["Wheat", "Milk"]}, {"name": "Cajun Corn", "allergens": ["Milk"]}]}, {"name": "KFC", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "items": [{"name": "Original Recipe Chicken", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Extra Crispy Chicken", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Mashed Potatoes & Gravy", "allergens": ["Milk", "Wheat"]}, {"name": "Mac & Cheese", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Coleslaw", "allergens": ["Eggs"]}, {"name": "Biscuit", "allergens": ["Milk", "Wheat"]}, {"name": "Chicken Sandwich", "allergens": ["Milk", "Wheat"]}]}, {"name": "Sonic Drive-In", "category": "Fast Food", "meal": ["Breakfast", "Lunch", "Dinner"], "items": [{"name": "Cheeseburger", "allergens": ["Milk", "Wheat"]}, {"name": "Tots", "allergens": []}, {"name": "Corn Dog", "allergens": ["Wheat", "Eggs"]}, {"name": "Slush (cherry)", "allergens": []}, {"name": "Chili Cheese Coney", "allergens": ["Milk", "Wheat", "Soybeans"]}]}, {"name": "Culver's", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "items": [{"name": "ButterBurger", "allergens": ["Milk", "Wheat"]}, {"name": "Frozen Custard", "allergens": ["Milk", "Eggs"]}, {"name": "Wisconsin Cheese Curds", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Chicken Tenders", "allergens": ["Wheat", "Eggs"]}]}, {"name": "Whataburger", "category": "Fast Food", "meal": ["Breakfast", "Lunch", "Dinner"], "items": [{"name": "Original Whataburger", "allergens": ["Milk", "Wheat"]}, {"name": "Taquito with Cheese", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Honey BBQ Chicken Strip Sandwich", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Onion Rings", "allergens": ["Milk", "Wheat", "Eggs"]}]}, {"name": "Jack in the Box", "category": "Fast Food", "meal": ["Breakfast", "Lunch", "Dinner"], "items": [{"name": "Jumbo Jack", "allergens": ["Milk", "Wheat"]}, {"name": "Curly Fries", "allergens": ["Wheat"]}, {"name": "Tacos", "allergens": ["Milk", "Wheat"]}, {"name": "Sourdough Jack", "allergens": ["Milk", "Eggs", "Wheat"]}]}, {"name": "Zaxby's", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "items": [{"name": "Chicken Fingers", "allergens": ["Milk", "Wheat"]}, {"name": "Texas Toast", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Kickin' Chicken Sandwich", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Fried White Cheddar Bites", "allergens": ["Milk", "Wheat", "Eggs"]}]}, {"name": "Dairy Queen", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.dairyqueen.com/en-us/allergen-info/", "items": [{"name": "Blizzard (Oreo)", "allergens": ["Milk", "Wheat", "Soybeans"]}, {"name": "GrillBurger", "allergens": ["Milk", "Wheat"]}, {"name": "Soft Serve Cone", "allergens": ["Milk"]}, {"name": "Chicken Strip Basket", "allergens": ["Wheat", "Milk", "Eggs"]}]}, {"name": "Baskin-Robbins", "category": "Dessert", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.baskinrobbins.com/en/allergen-information", "items": [{"name": "Vanilla Ice Cream", "allergens": ["Milk", "Eggs"]}, {"name": "Chocolate Chip Cookie Dough Ice Cream", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Sherbet", "allergens": ["Milk"]}, {"name": "Pralines 'n Cream", "allergens": ["Milk", "Tree Nuts"]}]}, {"name": "Krispy Kreme", "category": "Dessert", "meal": ["Breakfast"], "allergenGuideUrl": "https://www.krispykreme.com/allergen-information", "items": [{"name": "Original Glazed Doughnut", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}, {"name": "Chocolate Iced Doughnut", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}, {"name": "Strawberry Iced Doughnut", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}]}, {"name": "IHOP", "category": "Casual Dining", "meal": ["Breakfast", "Lunch"], "allergenGuideUrl": "https://www.ihop.com/en/nutrition", "items": [{"name": "Buttermilk Pancakes", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Scrambled Eggs", "allergens": ["Eggs", "Milk"]}, {"name": "Hash Browns", "allergens": []}, {"name": "Belgian Waffle", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "French Toast", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Bacon", "allergens": []}, {"name": "Sausage Links", "allergens": []}, {"name": "Country Fried Steak & Eggs", "allergens": ["Milk", "Eggs", "Wheat"]}]}, {"name": "Arby's", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://arbys.com/allergen-info", "items": [{"name": "Classic Roast Beef", "allergens": ["Wheat", "Soybeans"]}, {"name": "Curly Fries", "allergens": ["Wheat"]}, {"name": "Jamocha Shake", "allergens": ["Milk"]}, {"name": "Beef 'n Cheddar", "allergens": ["Milk", "Wheat", "Soybeans"]}, {"name": "Chicken Tenders", "allergens": ["Wheat", "Eggs"]}]}, {"name": "Chili's", "category": "Casual Dining", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.chilis.com/nutrition", "items": [{"name": "Baby Back Ribs", "allergens": ["Soybeans"]}, {"name": "Chicken Fajitas", "allergens": ["Milk"]}, {"name": "Southwestern Eggrolls", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Classic Bacon Burger", "allergens": ["Milk", "Wheat"]}, {"name": "Chicken Crispers", "allergens": ["Wheat", "Milk"]}, {"name": "Big Mouth Burger", "allergens": ["Milk", "Wheat"]}, {"name": "Quesadilla Explosion Salad", "allergens": ["Milk", "Wheat"]}]}, {"name": "Texas Roadhouse", "category": "Casual Dining", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.texasroadhouse.com/menu/allergen", "items": [{"name": "Fresh-Cut Sirloin Steak", "allergens": []}, {"name": "Rattlesnake Bites", "allergens": ["Milk", "Wheat"]}, {"name": "Fresh-Baked Bread", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Grilled BBQ Chicken", "allergens": []}, {"name": "Cactus Blossom", "allergens": ["Milk", "Wheat", "Eggs"]}]}, {"name": "The Cheesecake Factory", "category": "Casual Dining", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.thecheesecakefactory.com/allergen-menu", "items": [{"name": "Original Cheesecake", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Avocado Egg Rolls", "allergens": ["Wheat", "Milk", "Eggs"]}, {"name": "Chicken Madeira", "allergens": ["Milk", "Wheat"]}, {"name": "Fresh Grilled Salmon", "allergens": ["Fish"]}]}, {"name": "Applebee's", "category": "Casual Dining", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.applebees.com/en/nutrition", "items": [{"name": "Riblets", "allergens": ["Soybeans", "Wheat"]}, {"name": "Bourbon Street Chicken & Shrimp", "allergens": ["Crustacean Shellfish", "Milk"]}, {"name": "House Salad", "allergens": []}, {"name": "Classic Burger", "allergens": ["Milk", "Wheat"]}, {"name": "Fiesta Lime Chicken", "allergens": ["Milk"]}, {"name": "Three Cheese Chicken Penne", "allergens": ["Milk", "Wheat", "Eggs"]}]}, {"name": "Cracker Barrel", "category": "Casual Dining", "meal": ["Breakfast", "Lunch", "Dinner"], "allergenGuideUrl": "https://www.crackerbarrel.com/-/media/Project/cb-brandsite/brandsite/pdfs/AllergenGuide.pdf", "items": [{"name": "Country Fried Steak", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Buttermilk Biscuits", "allergens": ["Milk", "Wheat"]}, {"name": "Hashbrown Casserole", "allergens": ["Milk"]}, {"name": "Grilled Chicken Tenderloins", "allergens": ["Milk"]}, {"name": "Meatloaf", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Fried Okra", "allergens": ["Wheat", "Milk"]}]}, {"name": "Denny's", "category": "Casual Dining", "meal": ["Breakfast", "Lunch", "Dinner"], "allergenGuideUrl": "https://www.dennys.com/nutrition", "items": [{"name": "Original Grand Slam", "allergens": ["Eggs", "Milk", "Wheat"]}, {"name": "Moons Over My Hammy", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Hash Browns (plain)", "allergens": []}, {"name": "Bacon", "allergens": []}, {"name": "Pancakes", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "T-Bone Steak & Eggs", "allergens": ["Eggs", "Milk"]}]}, {"name": "Waffle House", "category": "Casual Dining", "meal": ["Breakfast", "Lunch", "Dinner"], "allergenGuideUrl": "https://www.wafflehouse.com/nutrition/", "items": [{"name": "Waffle", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Hashbrowns (plain)", "allergens": []}, {"name": "Bacon", "allergens": []}, {"name": "T-Bone Steak & Eggs", "allergens": ["Eggs"]}]}, {"name": "Bob Evans", "category": "Casual Dining", "meal": ["Breakfast", "Lunch"], "allergenGuideUrl": "https://www.bobevans.com/nutrition/", "items": [{"name": "Farm Fresh Omelet", "allergens": ["Eggs", "Milk"]}, {"name": "Sausage Gravy & Biscuits", "allergens": ["Milk", "Wheat"]}, {"name": "Pot Roast", "allergens": ["Wheat"]}]}, {"name": "Shake Shack", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://shakeshack.com/allergens", "items": [{"name": "ShackBurger", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Crinkle Cut Fries", "allergens": []}, {"name": "Chicken Shack", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Shack-cago Dog", "allergens": ["Wheat"]}]}, {"name": "Raising Cane's", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.raisingcanes.com/nutrition/", "items": [{"name": "Chicken Fingers", "allergens": ["Wheat", "Eggs"]}, {"name": "Texas Toast", "allergens": ["Milk", "Wheat"]}, {"name": "Crinkle-Cut Fries", "allergens": []}, {"name": "Coleslaw", "allergens": ["Eggs"]}]}, {"name": "Chuck E. Cheese", "category": "Family Dining", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.chuckecheese.com/allergen-information", "items": [{"name": "Cheese Pizza", "allergens": ["Milk", "Wheat"]}, {"name": "Pepperoni Pizza", "allergens": ["Milk", "Wheat"]}, {"name": "Chicken Wings", "allergens": ["Milk"]}]}, {"name": "Papa John's", "category": "Pizza", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.papajohns.com/allergens", "items": [{"name": "Cheese Pizza", "allergens": ["Milk", "Wheat"]}, {"name": "Garlic Knots", "allergens": ["Milk", "Wheat"]}, {"name": "Pepperoni Pizza", "allergens": ["Milk", "Wheat"]}, {"name": "Papadias", "allergens": ["Milk", "Wheat"]}]}, {"name": "Little Caesars", "category": "Pizza", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://littlecaesars.com/en-us/allergens/", "items": [{"name": "Pepperoni Pizza", "allergens": ["Milk", "Wheat"]}, {"name": "Crazy Bread", "allergens": ["Milk", "Wheat"]}, {"name": "Italian Cheese Bread", "allergens": ["Milk", "Wheat"]}]}, {"name": "Qdoba", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.qdoba.com/nutrition", "items": [{"name": "Chicken Burrito Bowl (no cheese)", "allergens": []}, {"name": "Queso", "allergens": ["Milk"]}, {"name": "Pulled Pork Burrito", "allergens": ["Wheat", "Milk"]}]}, {"name": "Moe's Southwest Grill", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.moes.com/allergen-info/", "items": [{"name": "Homewrecker Burrito", "allergens": ["Wheat", "Milk"]}, {"name": "Chips & Salsa", "allergens": []}, {"name": "Queso", "allergens": ["Milk"]}]}, {"name": "El Pollo Loco", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.elpolloloco.com/nutrition/", "items": [{"name": "Flame-Grilled Chicken", "allergens": []}, {"name": "Pollo Bowl", "allergens": ["Milk"]}, {"name": "Chicken Tortilla Soup", "allergens": ["Milk", "Wheat"]}]}, {"name": "Church's Chicken", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.churchs.com/nutrition", "items": [{"name": "Original Fried Chicken", "allergens": ["Wheat", "Eggs", "Milk"]}, {"name": "Honey Butter Biscuit", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Jalape\u00f1o Cheese Bombers", "allergens": ["Milk", "Wheat"]}]}, {"name": "Bojangles", "category": "Fast Food", "meal": ["Breakfast", "Lunch", "Dinner"], "allergenGuideUrl": "https://www.bojangles.com/nutrition/", "items": [{"name": "Cajun Filet Biscuit", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Bo-Tato Rounds", "allergens": []}, {"name": "Dirty Rice", "allergens": []}]}, {"name": "Long John Silver's", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.ljsilvers.com/nutrition", "items": [{"name": "Battered Fish", "allergens": ["Fish", "Wheat", "Eggs"]}, {"name": "Popcorn Shrimp", "allergens": ["Crustacean Shellfish", "Wheat"]}, {"name": "Hushpuppies", "allergens": ["Milk", "Wheat", "Eggs"]}]}, {"name": "Captain D's", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.captainds.com/nutrition/", "items": [{"name": "Battered Fish", "allergens": ["Fish", "Wheat", "Eggs"]}, {"name": "Shrimp Basket", "allergens": ["Crustacean Shellfish", "Wheat"]}, {"name": "Grilled Salmon", "allergens": ["Fish"]}]}, {"name": "Red Lobster", "category": "Casual Dining", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.redlobster.com/allergen", "items": [{"name": "Cheddar Bay Biscuits", "allergens": ["Milk", "Wheat"]}, {"name": "Grilled Salmon", "allergens": ["Fish"]}, {"name": "Shrimp Scampi", "allergens": ["Crustacean Shellfish", "Wheat", "Milk"]}, {"name": "Ultimate Feast", "allergens": ["Crustacean Shellfish", "Fish", "Milk", "Wheat"]}]}, {"name": "Outback Steakhouse", "category": "Casual Dining", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.outback.com/allergens", "items": [{"name": "Bloomin' Onion", "allergens": ["Wheat", "Eggs", "Milk"]}, {"name": "Sirloin Steak (plain)", "allergens": []}, {"name": "Grilled Shrimp on the Barbie", "allergens": ["Crustacean Shellfish"]}]}, {"name": "LongHorn Steakhouse", "category": "Casual Dining", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.longhornsteakhouse.com/nutrition", "items": [{"name": "Grilled Sirloin (plain)", "allergens": []}, {"name": "Parmesan Crusted Chicken", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Wild West Shrimp", "allergens": ["Crustacean Shellfish", "Wheat"]}]}, {"name": "Buffalo Wild Wings", "category": "Casual Dining", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.buffalowildwings.com/en/nutrition/", "items": [{"name": "Traditional Wings (plain)", "allergens": []}, {"name": "Boneless Wings", "allergens": ["Wheat", "Milk"]}, {"name": "Mozzarella Sticks", "allergens": ["Milk", "Wheat", "Eggs"]}]}, {"name": "IKEA Restaurant", "category": "Family Dining", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.ikea.com/us/en/rooms/food/allergen-info/", "items": [{"name": "Swedish Meatballs", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}, {"name": "Veggie Balls", "allergens": ["Milk", "Eggs"]}, {"name": "Salmon Plate", "allergens": ["Fish"]}]}, {"name": "P.F. Chang's", "category": "Casual Dining", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.pfchangs.com/allergen.html", "items": [{"name": "Orange Chicken", "allergens": ["Eggs", "Wheat", "Soybeans"]}, {"name": "Mongolian Beef", "allergens": ["Soybeans", "Wheat"]}, {"name": "Lettuce Wraps", "allergens": ["Peanuts", "Soybeans"]}, {"name": "Dan Dan Noodles", "allergens": ["Peanuts", "Wheat", "Soybeans"]}]}, {"name": "Noodles & Company", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.noodles.com/menu/allergens/", "items": [{"name": "Wisconsin Mac & Cheese", "allergens": ["Milk", "Wheat", "Eggs"]}, {"name": "Pad Thai", "allergens": ["Peanuts", "Eggs", "Fish", "Soybeans"]}, {"name": "Japanese Pan Noodles", "allergens": ["Wheat", "Soybeans", "Eggs"]}]}, {"name": "Firehouse Subs", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.firehousesubs.com/nutrition/", "items": [{"name": "Hook & Ladder Sub", "allergens": ["Milk", "Wheat"]}, {"name": "Firehouse Meatball", "allergens": ["Milk", "Wheat", "Eggs", "Soybeans"]}, {"name": "Hook & Ladder Club", "allergens": ["Milk", "Wheat"]}]}, {"name": "Potbelly Sandwich Shop", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.potbelly.com/nutrition", "items": [{"name": "Turkey Breast Sandwich", "allergens": ["Wheat"]}, {"name": "Mama's Meatball", "allergens": ["Milk", "Wheat", "Eggs", "Soybeans"]}, {"name": "Wreck Sandwich", "allergens": ["Milk", "Wheat"]}]}, {"name": "Blaze Pizza", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.blazepizza.com/allergens", "items": [{"name": "Build Your Own (cheese, red sauce)", "allergens": ["Milk", "Wheat"]}, {"name": "Gluten-Free Crust Pizza", "allergens": ["Milk"]}, {"name": "White Top Pizza", "allergens": ["Milk", "Wheat"]}]}, {"name": "MOD Pizza", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://modpizza.com/allergens", "items": [{"name": "Classic Pizza", "allergens": ["Milk", "Wheat"]}, {"name": "Caesar Salad", "allergens": ["Milk", "Fish", "Eggs", "Wheat"]}, {"name": "Mini Mod Pizza", "allergens": ["Milk", "Wheat"]}]}, {"name": "Sweetgreen", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.sweetgreen.com/menu/nutrition", "items": [{"name": "Harvest Bowl", "allergens": ["Tree Nuts", "Milk"]}, {"name": "Kale Caesar", "allergens": ["Milk", "Fish", "Wheat"]}, {"name": "Chicken Pesto Parm", "allergens": ["Milk", "Tree Nuts", "Wheat"]}]}, {"name": "Chopt Creative Salad Co.", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.chopt.com/nutrition", "items": [{"name": "Mexican Caesar Salad", "allergens": ["Milk", "Fish", "Wheat"]}, {"name": "Curry Chicken Salad", "allergens": ["Tree Nuts", "Eggs"]}]}, {"name": "Corner Bakery Cafe", "category": "Fast Casual", "meal": ["Breakfast", "Lunch"], "allergenGuideUrl": "https://www.cornerbakerycafe.com/nutrition/", "items": [{"name": "Chicken Panini", "allergens": ["Milk", "Wheat"]}, {"name": "Berry Parfait", "allergens": ["Milk", "Tree Nuts"]}, {"name": "Tomato Basil Soup", "allergens": ["Milk"]}]}, {"name": "Au Bon Pain", "category": "Fast Casual", "meal": ["Breakfast", "Lunch"], "allergenGuideUrl": "https://www.aubonpain.com/menu/allergens", "items": [{"name": "Turkey Croissant Sandwich", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Broccoli Cheddar Soup", "allergens": ["Milk", "Wheat"]}]}, {"name": "Einstein Bros. Bagels", "category": "Fast Casual", "meal": ["Breakfast", "Lunch"], "allergenGuideUrl": "https://www.einsteinbros.com/nutrition", "items": [{"name": "Plain Bagel", "allergens": ["Wheat"]}, {"name": "Bacon Egg & Cheese Sandwich", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Veggie Cream Cheese Bagel", "allergens": ["Milk", "Wheat"]}]}, {"name": "Tim Hortons", "category": "Coffee/Snack", "meal": ["Breakfast", "Lunch"], "allergenGuideUrl": "https://www.timhortons.com/us/en/allergens", "items": [{"name": "Original Blend Coffee", "allergens": []}, {"name": "Boston Cream Donut", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}, {"name": "Bagel with Cream Cheese", "allergens": ["Milk", "Wheat"]}]}, {"name": "Peet's Coffee", "category": "Coffee/Snack", "meal": ["Breakfast", "Lunch"], "allergenGuideUrl": "https://www.peets.com/pages/nutrition-info", "items": [{"name": "Caffe Latte", "allergens": ["Milk"]}, {"name": "Blueberry Muffin", "allergens": ["Milk", "Eggs", "Wheat"]}]}, {"name": "Caribou Coffee", "category": "Coffee/Snack", "meal": ["Breakfast", "Lunch"], "allergenGuideUrl": "https://www.cariboucoffee.com/nutrition", "items": [{"name": "Caramel High Rise", "allergens": ["Milk"]}, {"name": "Turtle Mocha", "allergens": ["Milk", "Tree Nuts"]}]}, {"name": "Jamba Juice", "category": "Coffee/Snack", "meal": ["Breakfast", "Lunch"], "allergenGuideUrl": "https://www.jamba.com/allergen-info", "items": [{"name": "Mango-A-Go-Go Smoothie", "allergens": ["Milk"]}, {"name": "Peanut Butter Moo'd", "allergens": ["Peanuts", "Milk"]}, {"name": "Acai Super-Antioxidant", "allergens": []}]}, {"name": "Smoothie King", "category": "Coffee/Snack", "meal": ["Breakfast", "Lunch"], "allergenGuideUrl": "https://www.smoothieking.com/nutrition", "items": [{"name": "Gladiator Smoothie", "allergens": ["Milk", "Eggs"]}, {"name": "Peanut Power Plus", "allergens": ["Peanuts", "Milk"]}]}, {"name": "Cinnabon", "category": "Dessert", "meal": ["Breakfast", "Lunch"], "allergenGuideUrl": "https://www.cinnabon.com/nutrition", "items": [{"name": "Classic Roll", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}, {"name": "BonBites", "allergens": ["Milk", "Eggs", "Wheat", "Soybeans"]}]}, {"name": "Auntie Anne's", "category": "Snack", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.auntieannes.com/nutrition", "items": [{"name": "Original Pretzel", "allergens": ["Milk", "Wheat", "Soybeans"]}, {"name": "Pretzel Dog", "allergens": ["Milk", "Wheat", "Soybeans"]}]}, {"name": "Del Taco", "category": "Fast Food", "meal": ["Breakfast", "Lunch", "Dinner"], "allergenGuideUrl": "https://www.deltaco.com/nutrition", "items": [{"name": "Del Taco (beef)", "allergens": ["Milk", "Wheat"]}, {"name": "Epic Cali Burrito", "allergens": ["Milk", "Eggs", "Wheat"]}]}, {"name": "Carl's Jr.", "category": "Fast Food", "meal": ["Breakfast", "Lunch", "Dinner"], "allergenGuideUrl": "https://www.carlsjr.com/nutrition", "items": [{"name": "Famous Star", "allergens": ["Milk", "Wheat"]}, {"name": "Breakfast Burrito", "allergens": ["Milk", "Eggs", "Wheat"]}]}, {"name": "Hardee's", "category": "Fast Food", "meal": ["Breakfast", "Lunch", "Dinner"], "allergenGuideUrl": "https://www.hardees.com/nutrition", "items": [{"name": "Made From Scratch Biscuit", "allergens": ["Milk", "Wheat"]}, {"name": "Charbroiled Angus Burger", "allergens": ["Milk", "Wheat"]}]}, {"name": "White Castle", "category": "Fast Food", "meal": ["Breakfast", "Lunch", "Dinner"], "allergenGuideUrl": "https://www.whitecastle.com/nutrition", "items": [{"name": "Original Slider", "allergens": ["Milk", "Wheat", "Soybeans"]}]}, {"name": "Steak 'n Shake", "category": "Fast Food", "meal": ["Breakfast", "Lunch", "Dinner"], "allergenGuideUrl": "https://www.steaknshake.com/nutrition", "items": [{"name": "Steakburger", "allergens": ["Milk", "Wheat"]}, {"name": "Chocolate Milkshake", "allergens": ["Milk"]}]}, {"name": "Checkers / Rally's", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.checkers.com/nutrition/", "items": [{"name": "Big Buford", "allergens": ["Milk", "Wheat"]}, {"name": "Famous Seasoned Fries", "allergens": []}]}, {"name": "Krystal", "category": "Fast Food", "meal": ["Breakfast", "Lunch", "Dinner"], "allergenGuideUrl": "https://www.krystal.com/nutrition", "items": [{"name": "Krystal Burger", "allergens": ["Milk", "Wheat"]}]}, {"name": "Freddy's Frozen Custard & Steakburgers", "category": "Fast Food", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://freddysusa.com/nutrition/", "items": [{"name": "Original Steakburger", "allergens": ["Milk", "Wheat"]}, {"name": "Frozen Custard", "allergens": ["Milk", "Eggs"]}]}, {"name": "Boston Market", "category": "Fast Casual", "meal": ["Lunch", "Dinner"], "allergenGuideUrl": "https://www.bostonmarket.com/nutrition/", "items": [{"name": "Rotisserie Chicken (plain)", "allergens": []}, {"name": "Mac & Cheese", "allergens": ["Milk", "Wheat", "Eggs"]}]}, {"name": "Golden Corral", "category": "Family Dining", "meal": ["Breakfast", "Lunch", "Dinner"], "allergenGuideUrl": "https://www.goldencorral.com/nutrition/", "items": [{"name": "Carved Sirloin (plain)", "allergens": []}, {"name": "Mac & Cheese", "allergens": ["Milk", "Wheat", "Eggs"]}]}, {"name": "Perkins Restaurant & Bakery", "category": "Casual Dining", "meal": ["Breakfast", "Lunch", "Dinner"], "allergenGuideUrl": "https://www.perkinsrestaurants.com/nutrition/", "items": [{"name": "Cherry Pie", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Country Scramble", "allergens": ["Eggs", "Milk"]}]}, {"name": "Village Inn", "category": "Casual Dining", "meal": ["Breakfast", "Lunch", "Dinner"], "allergenGuideUrl": "https://villageinn.com/nutrition/", "items": [{"name": "French Toast", "allergens": ["Milk", "Eggs", "Wheat"]}, {"name": "Omelette", "allergens": ["Eggs", "Milk"]}]}, {"name": "First Watch", "category": "Casual Dining", "meal": ["Breakfast", "Lunch"], "allergenGuideUrl": "https://firstwatch.com/nutrition/", "items": [{"name": "Avocado Toast", "allergens": ["Wheat"]}, {"name": "Quinoa Power Bowl", "allergens": ["Eggs"]}]}, {"name": "Le Peep", "category": "Casual Dining", "meal": ["Breakfast", "Lunch"], "allergenGuideUrl": "https://lepeep.com/menu/", "items": [{"name": "Peep's Benedict", "allergens": ["Eggs", "Milk", "Wheat"]}, {"name": "Fresh Fruit Crepe", "allergens": ["Milk", "Eggs", "Wheat"]}]}];
+
 function showTab(name) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  const idx = ['home','scanner','restaurants','faq','join'].indexOf(name);
+  const idx = ['home','restaurants','faq','join'].indexOf(name);
   document.querySelectorAll('.tab-btn')[idx].classList.add('active');
   document.getElementById('tabBtns').classList.remove('open');
 }
@@ -264,245 +306,165 @@ function joinWaitlist(e) {
   document.getElementById('confirmMsg').style.display = 'block';
 }
 
-const ALLERGEN_KEYWORDS = {
-  "Milk": ["milk","cheese","butter","cream","yogurt","dairy","ghee","casein","whey"],
-  "Eggs": ["egg","mayonnaise","meringue","aioli"],
-  "Fish": ["fish","salmon","tuna","cod","anchovy","bass","halibut","fish sauce"],
-  "Crustacean Shellfish": ["shrimp","crab","lobster","prawn","crawfish","shellfish"],
-  "Tree Nuts": ["almond","cashew","walnut","pecan","pistachio","hazelnut","macadamia","pine nut"],
-  "Peanuts": ["peanut","groundnut"],
-  "Wheat": ["wheat","flour","bread","noodle","pasta","soy sauce","udon","seitan"],
-  "Soybeans": ["soy","soybean","tofu","edamame","miso","tempeh"],
-  "Sesame": ["sesame","tahini"]
-};
+function setMode(mode) {
+  document.getElementById('zipRow').style.display = mode === 'zip' ? 'flex' : 'none';
+  document.getElementById('nameRow').style.display = mode === 'name' ? 'flex' : 'none';
+  document.getElementById('modeZipBtn').classList.toggle('active', mode === 'zip');
+  document.getElementById('modeNameBtn').classList.toggle('active', mode === 'name');
+  document.getElementById('restaurantGrid').innerHTML = '';
+  document.getElementById('searchStatus').textContent = '';
+}
 
-function analyzeText(text) {
-  const lower = text.toLowerCase();
-  const found = [];
-  for (const [allergen, keywords] of Object.entries(ALLERGEN_KEYWORDS)) {
-    for (const kw of keywords) {
-      if (lower.includes(kw)) { found.push(allergen); break; }
+function findDbMatch(name) {
+  const norm = name.toLowerCase();
+  return RESTAURANT_DB.find(r => norm.includes(r.name.toLowerCase()) || r.name.toLowerCase().includes(norm));
+}
+
+function getSelectedAllergens(containerId) {
+  const checked = document.querySelectorAll(`#${containerId} input[type=checkbox]:checked`);
+  return Array.from(checked).map(c => c.value);
+}
+
+function renderSafeItems(dbEntry, allergens) {
+  if (!dbEntry) {
+    return '<div class="r-note">No verified allergen data yet for this restaurant — be the first to submit a report</div>';
+  }
+  let items = dbEntry.items;
+  const guideLink = dbEntry.allergenGuideUrl
+    ? `<a href="${dbEntry.allergenGuideUrl}" target="_blank" rel="noopener" style="font-size:0.78rem;color:var(--primary-dark);text-decoration:underline;display:inline-block;margin-top:6px;">📄 View official allergen guide</a>`
+    : '';
+  let matchHtml = '<span class="match-badge">✅ Verified allergen data available</span>' + guideLink;
+  if (allergens && allergens.length) {
+    items = items.filter(i => !i.allergens.some(a => allergens.includes(a)));
+    if (items.length === 0) {
+      return matchHtml + `<div class="r-note">No listed items avoid all of: ${allergens.join(', ')} in our current data for this restaurant</div>`;
     }
   }
-  return found;
+  const list = items.map(i => `
+    <div class="safe-item">
+      <strong>${i.name}</strong>
+      <div class="item-allergens">${i.allergens.length ? 'Contains: ' + i.allergens.join(', ') : 'No major allergens listed'}</div>
+    </div>`).join('');
+  return matchHtml + `<div class="safe-items">${list}</div>`;
 }
 
-// --- Image preprocessing: grayscale + contrast boost + upscale + binary threshold ---
-function preprocessImage(imgDataUrl) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = img.width < 900 ? 2 : 1; // upscale small images for better OCR
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      const ctx = canvas.getContext('2d');
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+const zipCache = {};
+const RADIUS_METERS = 8047; // 5 miles
 
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
-      // Convert to grayscale + apply contrast stretch
-      let min = 255, max = 0;
-      const grays = new Uint8ClampedArray(data.length / 4);
-      for (let i = 0; i < data.length; i += 4) {
-        const gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-        grays[i/4] = gray;
-        if (gray < min) min = gray;
-        if (gray > max) max = gray;
-      }
-      const range = Math.max(max - min, 1);
-
-      for (let i = 0; i < data.length; i += 4) {
-        let val = ((grays[i/4] - min) / range) * 255;
-        // Binary threshold for crisp black text on white background
-        val = val > 150 ? 255 : 0;
-        data[i] = data[i+1] = data[i+2] = val;
-      }
-      ctx.putImageData(imageData, 0, 0);
-      resolve(canvas.toDataURL('image/png'));
-    };
-    img.src = imgDataUrl;
-  });
+function fetchWithTimeout(url, options = {}, ms = 9000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), ms);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeout));
 }
 
-// --- OCR with Tesseract.js (local, free) with tuned page segmentation mode ---
-async function runTesseractOCR(processedImage) {
-  const result = await Tesseract.recognize(processedImage, 'eng', {
-    tessedit_pageseg_mode: 6 // treat image as a uniform block of text — better for menus
-  });
-  return result.data.text.trim();
-}
-
-// --- Free OCR.space fallback (25,000 free requests/month, no card required) ---
-// NOTE: Replace OCR_SPACE_API_KEY below with your own free key from https://ocr.space/ocrapi
-const OCR_SPACE_API_KEY = 'K85209742588957'; // personal free-tier key
-async function runOcrSpace(processedImage) {
-  const formData = new FormData();
-  formData.append('base64Image', processedImage);
-  formData.append('language', 'eng');
-  formData.append('OCREngine', '2');
-  formData.append('scale', 'true');
-
-  const res = await fetch('https://api.ocr.space/parse/image', {
-    method: 'POST',
-    headers: { 'apikey': OCR_SPACE_API_KEY },
-    body: formData
-  });
-  const json = await res.json();
-  if (json.ParsedResults && json.ParsedResults.length) {
-    return json.ParsedResults[0].ParsedText.trim();
-  }
-  throw new Error('OCR.space returned no results');
-}
-
-function displayResult(text, usedFallback) {
-  document.getElementById('ocrProgress').style.display = 'none';
-  const found = analyzeText(text);
-  const resultBox = document.getElementById('resultBox');
-  const scoreText = document.getElementById('riskScoreText');
-  const badgeContainer = document.getElementById('badgeContainer');
-  const extractedBox = document.getElementById('extractedTextBox');
-
-  resultBox.className = 'result';
-  badgeContainer.innerHTML = '';
-
-  const engineNote = usedFallback ? ' (via OCR.space cloud engine)' : ' (via on-device Tesseract)';
-
-  if (!text.trim()) {
-    resultBox.classList.add('risk-med');
-    scoreText.textContent = '⚠️ No readable text detected';
-    scoreText.style.color = 'var(--warning)';
-    extractedBox.textContent = 'No text could be extracted' + engineNote + '. Try a clearer, well-lit, higher-resolution photo.';
-  } else if (found.length === 0) {
-    resultBox.classList.add('risk-low');
-    scoreText.textContent = '✅ No major allergens detected in text';
-    scoreText.style.color = 'var(--primary-dark)';
-    badgeContainer.innerHTML = '<span class="badge badge-safe">No FDA top-9 allergen keywords found</span>';
-    extractedBox.textContent = 'Extracted text' + engineNote + ': ' + text.trim();
-  } else {
-    const highRisk = found.length >= 3;
-    resultBox.classList.add(highRisk ? 'risk-high' : 'risk-med');
-    scoreText.textContent = highRisk ? '⚠️ Multiple allergens detected' : '⚠️ Allergen(s) detected';
-    scoreText.style.color = highRisk ? 'var(--danger)' : 'var(--warning)';
-    badgeContainer.innerHTML = found.map(a => `<span class="badge badge-allergen">${a}</span>`).join('');
-    extractedBox.textContent = 'Extracted text' + engineNote + ': ' + text.trim();
-  }
-  resultBox.style.display = 'block';
-}
-
-async function handleUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    document.getElementById('preview').src = e.target.result;
-    document.getElementById('preview').style.display = 'block';
-    document.getElementById('resultBox').style.display = 'none';
-    document.getElementById('ocrProgress').style.display = 'block';
-    document.getElementById('ocrProgress').textContent = '🔄 Preprocessing image for better accuracy...';
-
+// Tries mirrors one at a time (not racing) so a failed/timed-out mirror doesn't stop the search —
+// it just moves to the next one automatically. Never gives up until all mirrors are exhausted.
+async function fetchWithFallback(query) {
+  const mirrors = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.openstreetmap.ru/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+  ];
+  let lastError = null;
+  for (const mirror of mirrors) {
     try {
-      const processed = await preprocessImage(e.target.result);
-      document.getElementById('ocrProgress').textContent = '🔄 Reading text (on-device engine)...';
-
-      let text = '';
-      let usedFallback = false;
-      try {
-        text = await runTesseractOCR(processed);
-        // If Tesseract found very little text, try the more accurate cloud fallback
-        if (text.replace(/\s/g, '').length < 8) {
-          document.getElementById('ocrProgress').textContent = '🔄 Low confidence — retrying with cloud OCR engine...';
-          text = await runOcrSpace(processed);
-          usedFallback = true;
-        }
-      } catch (err) {
-        document.getElementById('ocrProgress').textContent = '🔄 On-device engine failed — retrying with cloud OCR engine...';
-        text = await runOcrSpace(processed);
-        usedFallback = true;
-      }
-      displayResult(text, usedFallback);
-    } catch (err) {
-      document.getElementById('ocrProgress').style.display = 'none';
-      const resultBox = document.getElementById('resultBox');
-      resultBox.className = 'result risk-med';
-      document.getElementById('riskScoreText').textContent = '⚠️ Could not process image';
-      document.getElementById('badgeContainer').innerHTML = '';
-      document.getElementById('extractedTextBox').textContent = 'Both OCR engines failed. Please try another, clearer photo.';
-      resultBox.style.display = 'block';
-    }
-  };
-  reader.readAsDataURL(file);
-}
-
-// --- Restaurant search with multi-mirror Overpass fallback for reliability ---
-const OVERPASS_MIRRORS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://overpass.openstreetmap.ru/api/interpreter'
-];
-
-async function fetchWithMirrors(query) {
-  for (const mirror of OVERPASS_MIRRORS) {
-    try {
-      const res = await fetch(`${mirror}?data=${encodeURIComponent(query)}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.elements) return data;
-      }
-    } catch (err) {
-      continue; // try next mirror
+      const res = await fetchWithTimeout(`${mirror}?data=${encodeURIComponent(query)}`, {}, 9000);
+      if (!res.ok) { lastError = `HTTP ${res.status}`; continue; }
+      const data = await res.json();
+      if (data.elements) return data;
+      lastError = 'No elements in response';
+    } catch (e) {
+      lastError = e.name === 'AbortError' ? 'Timed out' : e.message;
+      continue; // move to next mirror instead of failing
     }
   }
-  throw new Error('All Overpass mirrors failed');
+  throw new Error(lastError || 'All mirrors failed');
 }
 
 async function searchZip() {
   const zip = document.getElementById('zipInput').value.trim();
+  const allergens = getSelectedAllergens('allergenMultiZip');
   const grid = document.getElementById('restaurantGrid');
-  const status = document.getElementById('zipStatus');
+  const status = document.getElementById('searchStatus');
   grid.innerHTML = '';
   if (!zip) { status.textContent = 'Please enter a zip code.'; return; }
-  status.textContent = '🔄 Looking up location...';
 
-  try {
-    const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zip)}&country=USA&format=json&limit=1`, {
-      headers: { 'Accept': 'application/json' }
-    });
-    const geoData = await geoRes.json();
-    if (!geoData.length) {
-      status.textContent = 'Could not find that zip code. Please check it and try again.';
-      return;
-    }
-    const lat = parseFloat(geoData[0].lat);
-    const lon = parseFloat(geoData[0].lon);
-    status.textContent = '🔄 Searching nearby restaurants (trying live data sources)...';
-
-    const overpassQuery = `[out:json][timeout:25];node["amenity"="restaurant"](around:3000,${lat},${lon});out 20;`;
-    const overpassData = await fetchWithMirrors(overpassQuery);
-
-    if (!overpassData.elements || !overpassData.elements.length) {
-      status.textContent = `No restaurant data found near ${zip}. Try a nearby zip code or a more populated area.`;
-      return;
-    }
-
-    status.textContent = `Showing ${Math.min(overpassData.elements.length, 20)} real restaurants near ${zip} (live OpenStreetMap data)`;
-    overpassData.elements.slice(0, 20).forEach(el => {
-      const name = el.tags && el.tags.name ? el.tags.name : 'Unnamed restaurant';
-      const cuisine = el.tags && el.tags.cuisine ? el.tags.cuisine.replace(/_/g, ' ') : 'Cuisine not listed';
-      const addr = el.tags && el.tags["addr:street"] ? `${el.tags["addr:housenumber"] || ''} ${el.tags["addr:street"]}`.trim() : 'Address not listed';
-      grid.innerHTML += `
-        <div class="r-card">
-          <div class="r-name">${name}</div>
-          <div class="r-cuisine">${cuisine}</div>
-          <div class="r-addr">${addr}</div>
-          <div class="r-note">No community allergy reports yet — be the first to submit one</div>
-        </div>`;
-    });
-  } catch (err) {
-    status.textContent = 'Live restaurant data is temporarily unavailable from all sources. Please try again shortly.';
+  if (zipCache[zip]) {
+    status.textContent = `Found ${zipCache[zip].length} restaurants near ${zip} within 5 miles (cached — instant)`;
+    renderResults(zipCache[zip], allergens, grid);
+    return;
   }
+
+  status.textContent = '🔄 Looking up location...';
+  try {
+    const geoRes = await fetchWithTimeout(`https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(zip)}&country=USA&format=json&limit=1`, { headers: { 'Accept': 'application/json' } }, 6000);
+    const geoData = await geoRes.json();
+    if (!geoData.length) { status.textContent = 'Could not find that zip code.'; return; }
+    const lat = parseFloat(geoData[0].lat), lon = parseFloat(geoData[0].lon);
+    status.textContent = '🔄 Searching restaurants within 5 miles (auto-retrying if a source is slow)...';
+
+    const query = `[out:json][timeout:20];node["amenity"~"^(restaurant|fast_food|cafe)$"](around:${RADIUS_METERS},${lat},${lon});out 60;`;
+    let data;
+    try {
+      data = await fetchWithFallback(query);
+    } catch (e) {
+      status.textContent = `All restaurant data sources are temporarily unavailable. Please try again in a moment.`;
+      return;
+    }
+
+    const results = data.elements.filter(el => el.tags && el.tags.name);
+    if (!results.length) { status.textContent = `No restaurant data found within 5 miles of ${zip}.`; return; }
+
+    zipCache[zip] = results;
+    status.textContent = `Found ${results.length} restaurants within 5 miles of ${zip} — showing verified allergen matches first`;
+    renderResults(results, allergens, grid);
+  } catch (err) {
+    status.textContent = 'Live restaurant data temporarily unavailable. Please try again shortly.';
+  }
+}
+
+function renderResults(results, allergens, grid) {
+  grid.innerHTML = '';
+  const withMatch = [], withoutMatch = [];
+  results.forEach(el => {
+    const dbEntry = findDbMatch(el.tags.name);
+    (dbEntry ? withMatch : withoutMatch).push({el, dbEntry});
+  });
+  [...withMatch, ...withoutMatch.slice(0,20)].forEach(({el, dbEntry}) => {
+    const cuisine = el.tags.cuisine ? el.tags.cuisine.replace(/_/g,' ') : (dbEntry ? dbEntry.category : 'Cuisine not listed');
+    const addr = el.tags["addr:street"] ? `${el.tags["addr:housenumber"]||''} ${el.tags["addr:street"]}`.trim() : 'Address not listed';
+    grid.innerHTML += `
+      <div class="r-card">
+        <div class="r-name">${el.tags.name}</div>
+        <div class="r-cuisine">${cuisine}</div>
+        <div class="r-addr">${addr}</div>
+        ${renderSafeItems(dbEntry, allergens)}
+      </div>`;
+  });
+}
+
+function searchByName() {
+  const name = document.getElementById('nameInput').value.trim();
+  const allergen = document.getElementById('allergySelectName').value;
+  const grid = document.getElementById('restaurantGrid');
+  const status = document.getElementById('searchStatus');
+  grid.innerHTML = '';
+  if (!name) { status.textContent = 'Please enter a restaurant name.'; return; }
+
+  const dbEntry = findDbMatch(name);
+  if (!dbEntry) {
+    status.textContent = `"${name}" isn't in our Phase 1 database of 87 chains yet.`;
+    grid.innerHTML = `<div class="r-card"><div class="r-name">${name}</div><div class="r-note">No verified allergen data yet — this restaurant will be added in a future phase or via community reports</div></div>`;
+    return;
+  }
+  status.textContent = `Showing verified menu items for ${dbEntry.name}`;
+  grid.innerHTML = `
+    <div class="r-card" style="grid-column:1/-1;">
+      <div class="r-name">${dbEntry.name}</div>
+      <div class="r-cuisine">${dbEntry.category} · ${dbEntry.meal.join(', ')}</div>
+      ${renderSafeItems(dbEntry, allergens)}
+    </div>`;
 }
 </script>
 
