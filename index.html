@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeBite — Crowdsourced Allergen Risk Scanner</title>
+<style>
+  :root {
+    --primary: #16a34a;
+    --primary-dark: #15803d;
+    --danger: #dc2626;
+    --warning: #f59e0b;
+    --bg: #f8fafc;
+    --text: #1e293b;
+    --card: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 80px 20px 100px; text-align: center; }
+  header h1 { font-size: 2.8rem; margin-bottom: 16px; }
+  header p { font-size: 1.2rem; max-width: 600px; margin: 0 auto 32px; opacity: 0.95; }
+  .cta-btn { background: white; color: var(--primary-dark); padding: 14px 32px; border-radius: 30px; font-weight: 700; font-size: 1rem; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+  .cta-btn:hover { transform: translateY(-2px); transition: 0.2s; }
+  section { max-width: 1000px; margin: 0 auto; padding: 60px 20px; }
+  .demo-card { background: var(--card); border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); padding: 40px; margin-top: -60px; }
+  .demo-card h2 { text-align: center; margin-bottom: 24px; color: var(--primary-dark); }
+  .upload-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: 0.2s; }
+  .upload-zone:hover { border-color: var(--primary); background: #f0fdf4; }
+  .upload-zone input { display: none; }
+  #preview { max-width: 200px; margin: 16px auto; display: none; border-radius: 8px; }
+  .result { display: none; margin-top: 24px; padding: 24px; border-radius: 12px; }
+  .risk-high { background: #fef2f2; border: 2px solid var(--danger); }
+  .risk-med { background: #fffbeb; border: 2px solid var(--warning); }
+  .risk-low { background: #f0fdf4; border: 2px solid var(--primary); }
+  .risk-score { font-size: 2.5rem; font-weight: 800; }
+  .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; margin-right: 8px; margin-top: 8px; }
+  .badge-allergen { background: #fee2e2; color: var(--danger); }
+  .badge-safe { background: #dcfce7; color: var(--primary-dark); }
+  .reports { font-size: 0.9rem; color: #64748b; margin-top: 12px; }
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; margin-top: 20px; }
+  .feature { background: var(--card); border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+  .feature h3 { color: var(--primary-dark); margin-bottom: 8px; }
+  .how-it-works { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px; }
+  .step { flex: 1; min-width: 200px; text-align: center; }
+  .step-num { width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 12px; }
+  form.waitlist { background: var(--primary-dark); border-radius: 16px; padding: 48px; text-align: center; color: white; }
+  form.waitlist input[type=email] { padding: 14px; border-radius: 8px; border: none; width: 280px; margin-right: 8px; font-size: 1rem; }
+  form.waitlist select { padding: 14px; border-radius: 8px; border: none; margin-right: 8px; font-size: 1rem; }
+  form.waitlist button { padding: 14px 28px; border-radius: 8px; border: none; background: white; color: var(--primary-dark); font-weight: 700; cursor: pointer; }
+  footer { text-align: center; padding: 30px; color: #94a3b8; font-size: 0.85rem; }
+  .stat-row { display: flex; gap: 40px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+  .stat { text-align: center; }
+  .stat .num { font-size: 2rem; font-weight: 800; color: var(--primary-dark); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Know what's really in your meal — before you order.</h1>
+  <p>SafeBite scans any menu or dish photo, cross-references crowdsourced allergy reports, and gives you an instant risk score so you can eat out with confidence.</p>
+  <button class="cta-btn" onclick="document.getElementById('demo').scrollIntoView({behavior:'smooth'})">Try the Demo</button>
+</header>
+
+<section id="demo">
+  <div class="demo-card">
+    <h2>📸 Scan a menu or dish photo</h2>
+    <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+      <input type="file" id="fileInput" accept="image/*" onchange="handleUpload(event)">
+      <p><strong>Click to upload</strong> a photo of a menu item or dish</p>
+      <p style="font-size:0.85rem;color:#94a3b8;margin-top:8px">(Demo mode — try any image to see a sample risk analysis)</p>
+      <img id="preview" src="" alt="preview">
+    </div>
+    <div class="result risk-high" id="resultBox">
+      <div class="risk-score" style="color:var(--danger)">⚠️ High Risk — 78/100</div>
+      <p style="margin-top:8px">Detected dish: <strong>Pad Thai</strong></p>
+      <div>
+        <span class="badge badge-allergen">Peanuts</span>
+        <span class="badge badge-allergen">Shellfish (shared fryer)</span>
+        <span class="badge badge-allergen">Soy</span>
+        <span class="badge badge-safe">Gluten-free option available</span>
+      </div>
+      <p class="reports">🗣️ 14 allergic users reported cross-contamination at similar Thai dishes in the last 90 days. 3 reported reactions despite "no peanut" request.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 style="text-align:center;margin-bottom:8px">Why SafeBite</h2>
+  <p style="text-align:center;color:#64748b">Built by people who've had a close call at a restaurant — not just a database lookup.</p>
+  <div class="features">
+    <div class="feature">
+      <h3>🔍 AI Menu &amp; Photo Scan</h3>
+      <p>Snap a photo of a menu or plated dish. Our model identifies the likely dish and cross-references known ingredient profiles for hidden allergens.</p>
+    </div>
+    <div class="feature">
+      <h3>🗺️ Crowdsourced Reports</h3>
+      <p>Real allergic diners report reactions, cross-contamination, and kitchen responsiveness — data no static ingredient database can capture.</p>
+    </div>
+    <div class="feature">
+      <h3>📊 Dynamic Risk Score</h3>
+      <p>A 0–100 score blends ingredient data, restaurant history, and recent user reports, updated in real time as new reports come in.</p>
+    </div>
+    <div class="feature">
+      <h3>🔔 Restaurant Alerts</h3>
+      <p>Get notified if a restaurant you frequent has a new allergy incident report or changes its kitchen practices.</p>
+    </div>
+  </div>
+</section>
+
+<section style="background:white;border-radius:16px;">
+  <h2 style="text-align:center">How it works</h2>
+  <div class="how-it-works">
+    <div class="step"><div class="step-num">1</div><p>Scan a menu or dish photo before you order</p></div>
+    <div class="step"><div class="step-num">2</div><p>Get an instant allergen risk score and detected ingredients</p></div>
+    <div class="step"><div class="step-num">3</div><p>See real reports from other allergic diners at that restaurant</p></div>
+    <div class="step"><div class="step-num">4</div><p>Report your own experience to help the next person</p></div>
+  </div>
+  <div class="stat-row">
+    <div class="stat"><div class="num">32M+</div>Americans with food allergies</div>
+    <div class="stat"><div class="num">200K+</div>ER visits/year from food allergy reactions</div>
+    <div class="stat"><div class="num">$0</div>cost to join the waitlist</div>
+  </div>
+</section>
+
+<section>
+  <form class="waitlist" onsubmit="joinWaitlist(event)">
+    <h2>Join the waitlist</h2>
+    <p style="margin-bottom:20px;opacity:0.9">Be first to try SafeBite when we launch. Tell us your top allergy so we tailor your first scan.</p>
+    <input type="email" id="email" placeholder="you@email.com" required>
+    <select id="allergy">
+      <option>Peanuts</option>
+      <option>Tree nuts</option>
+      <option>Shellfish</option>
+      <option>Dairy</option>
+      <option>Gluten</option>
+      <option>Eggs</option>
+      <option>Soy</option>
+      <option>Other</option>
+    </select>
+    <button type="submit">Join Waitlist</button>
+    <p id="confirmMsg" style="margin-top:16px;display:none;font-weight:700">✅ You're on the list! We'll email you at launch.</p>
+  </form>
+</section>
+
+<footer>
+  Built for YC Startup School 2026 · SafeBite is a concept demo — not yet a licensed medical product.
+</footer>
+
+<script>
+function handleUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('preview').src = e.target.result;
+    document.getElementById('preview').style.display = 'block';
+    document.getElementById('resultBox').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+function joinWaitlist(e) {
+  e.preventDefault();
+  document.getElementById('confirmMsg').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
